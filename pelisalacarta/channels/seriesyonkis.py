@@ -171,36 +171,104 @@ def series(item):
     return itemlist
 
 def detalle_programa(item,data=""):
-    
-    #http://www.seriesyonkis.sx/serie/gungrave
-    #http://www.seriesyonkis.sx/ficha/serie/gungrave
     url = item.url
-    if "seriesyonkis.com/serie/" in url:
-        url = url.replace("seriesyonkis.com/serie/","seriesyonkis.com/ficha/serie/")
+    imdb=''
+
     
-    # Descarga la página
-    if data=="":
-        data = scrapertools.cache_page(url)
+    if "seriesyonkis.sx/serie/" in url:
 
-    # Obtiene el thumbnail
+        url = url.replace("seriesyonkis.sx/serie/","seriesyonkis.sx/ficha/serie/")
+    data = scrapertools.cache_page(url)
     try:
-        item.thumbnail = scrapertools.get_match(data,'<div class="profile-info"[^<]+<a[^<]+<img src="([^"]+)"')
+        imdb=scrapertools.htmlclean( scrapertools.get_match(data,'<a target="_blank" href="([^"]+)">IMDB') )
+
+    except:
+
+	pass
+	
+    logger.info("IMDB="+imdb)
+    item=detalle_img(item,imdb)
+	
+    try:
+
+        new_thumbnail = scrapertools.get_match(data,'<div class="profile-info"[^<]+<a[^<]+<img src="([^"]+)"')
+
     except:
         pass
 
+    if item.thumbnail=="":
+
+        item.thumbnail=new_thumbnail
+
+
     try:
+
         item.plot = scrapertools.htmlclean( scrapertools.get_match(data,'<div class="details">(.*?)</div>') )
+
     except:
+
         pass
+
     logger.info("plot="+item.plot)
 
+
     try:
+
         item.title = scrapertools.get_match(data,'<h1 class="underline"[^>]+>([^<]+)</h1>').strip()
+
     except:
+
         pass
 
     return item
+def detalle_img(item,imdb_url):
 
+    url = imdb_url
+    logger.info("URL2= "+url)
+    data = scrapertools.cache_page(url)
+    logger.info("data2= "+data)
+    patron  = '<div class="image"[^<]+'
+    patron += '<a href="([^"]+)"[^<]+'
+    patron += '<img.*?src="([^"]+)"'
+    patron += '.?itemprop="image"'
+    try:
+
+        matches = re.compile(patron,re.DOTALL).findall(data)
+        scrapertools.printMatches(matches)
+        for scrapedurl,scrapedtitle in matches:
+            title = scrapedtitle.strip()
+            url = scrapedurl
+            item=detalle_img_big(item,url)
+            break
+    except:
+
+        pass
+    
+    item=detalle_img_big(item,url)
+    return item
+
+	
+def detalle_img_big(item,imdb_url2):
+	url = 'http://www.imdb.com' + imdb_url2
+	logger.info("URL3= "+url)
+	data = scrapertools.cache_page(url)
+	logger.info("data3= "+data)
+	patron='<table class="photo"[^<]+'
+	#patron += '<tbody[^<]+'	
+	patron += '<tr[^<]+'	
+	patron += '<td[^<]+'	
+	patron += '<a href="[^"]+"[^<]+'
+	patron += '<img.*?src="([^"]+)"'
+	try:
+	    item.thumbnail= scrapertools.get_match(data,patron)
+	    logger.info("new thumb3 "+item.thumbnail + " "+patron)
+	except:
+	    pass
+	
+	return item
+			
+	
+	
 def episodios(item):
     logger.info("[seriesyonkis.py] episodios")
 
@@ -218,6 +286,9 @@ def episodios(item):
     #scrapertools.printMatches(matches)
         
     itemlist = []  
+    if config.get_platform().startswith("xbmc") or config.get_platform().startswith("boxee"):
+        itemlist.append( Item(channel=item.channel, title="Añadir esta serie a la biblioteca de XBMC", url=item.url, action="add_serie_to_library", extra="episodios", show=item.show,fanart="http://pelisalacarta.mimediacenter.info/fanart/seriesyonkis.jpg") )
+        itemlist.append( Item(channel=item.channel, title="Descargar todos los episodios de la serie", url=item.url, action="download_all_episodes", extra="episodios", show=item.show,fanart="http://pelisalacarta.mimediacenter.info/fanart/seriesyonkis.jpg") )
 
     No = 0
     for match in matches:
@@ -232,9 +303,6 @@ def episodios(item):
             itemlist.append( Item(channel=__channel__, action="season" , title= title, url=match, thumbnail=thumbnail, plot="", show = title, folder=True))
         '''
 
-    if config.get_platform().startswith("xbmc") or config.get_platform().startswith("boxee"):
-        itemlist.append( Item(channel=item.channel, title="Añadir esta serie a la biblioteca de XBMC", url=item.url, action="add_serie_to_library", extra="episodios", show=item.show,fanart="http://pelisalacarta.mimediacenter.info/fanart/seriesyonkis.jpg") )
-        itemlist.append( Item(channel=item.channel, title="Descargar todos los episodios de la serie", url=item.url, action="download_all_episodes", extra="episodios", show=item.show,fanart="http://pelisalacarta.mimediacenter.info/fanart/seriesyonkis.jpg") )
 
     return itemlist
 

@@ -246,6 +246,7 @@ def channels_list():
         itemlist.append( Item( title=config.get_setting("personalchannelname5") , channel="personal5" , language="" , category="F,S,D,A" , type="generic"  ))
     itemlist.append( Item( title="Animeflv"              , channel="animeflv"             , language="ES"    , category="A"       , type="generic"  ))
     itemlist.append( Item( title="Animeid"               , channel="animeid"              , language="ES"    , category="A"       , type="generic"  ))
+    itemlist.append( Item( title="Aquitorrent"               , channel="aquitorrent"              , language="ES"    , category="F,S,D"       , type="generic"  ))
     itemlist.append( Item( title="Bajui"       , channel="bajui"             , language="ES"      , category="F,S,D,VOS" , type="generic"    ))
     if config.get_setting("enableadultmode") == "true": itemlist.append( Item( title="Beeg"             , channel="beeg"            , language="ES" , category="F" , type="generic"  ))
     #itemlist.append( Item( title="Biblioteca XBMC"       , channel="libreria"             , language=""      , category="F,S,D,A" , type="wiimc"    ))
